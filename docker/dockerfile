@@ -1,0 +1,35 @@
+FROM ubuntu:20.04
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get install -y \
+    build-essential  \
+    software-properties-common \
+    git \
+    python3-pip \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN pip install -U pip>=20.3
+RUN pip install --upgrade pip && pip --no-cache-dir install\
+    numpy\
+    typing\
+    pytest\
+    future\
+    numba\
+    cachetools \
+    jupyter-client\
+    traitlets\
+    gin-config\
+    notebook\
+    z3 \
+    z3-solver\
+    qiskit
+
+RUN ln -s /usr/bin/python3 /usr/bin/python 
+WORKDIR /sat
+EXPOSE  8888
+EXPOSE  6666 
+# Add Tini. Tini operates as a process subreaper for jupyter. This prevents kernel crashes.
+ENV TINI_VERSION v0.19.0
+ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /usr/bin/tini
+RUN chmod +x /usr/bin/tini
+ENTRYPOINT ["/usr/bin/tini", "--"]
+CMD ["bash", "-c", "source /etc/bash.bashrc && jupyter notebook --notebook-dir=/sat --ip 0.0.0.0  --allow-root"]
