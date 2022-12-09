@@ -63,52 +63,29 @@ class SolversTest(absltest.TestCase):
     ls_sol = utils.puzzle_sol_str_to_list(s, n_rows=rows, n_cols=cols)
     self.assertTrue(utils.latin_square_verify(ls_sol, n_rows=rows))
 
-  def test_cnf1_solving(self):
+  def test_cnf_solving(self):
     np.random.seed(0)
-    config = configs.Config(
-        data_file="dataset/test.dimacs",
-        data_ext="dimacs",
-        puzzle_type="cnf",
-        solver_type="z3",
-        problem_type="sat")
-    data = datasets.Dataset(config)
-    constraint_params = data.constraint_params
-    model, solving_constraint = \
-        models.construct_model(
-          config = config,
-          constraint_param = constraint_params
-        )
+    for test_file in ("dataset/test.dimacs", "dataset/test2.dimacs",
+                      "dataset/test3.dimacs", "dataset/test4.dimacs"):
+      config = configs.Config(
+          data_file=test_file,
+          data_ext="dimacs",
+          puzzle_type="cnf",
+          solver_type="z3",
+          problem_type="sat")
+      data = datasets.Dataset(config)
+      constraint_params = data.constraint_params
+      model, solving_constraint = \
+          models.construct_model(
+            config = config,
+            constraint_param = constraint_params
+          )
 
-    solver_ = solver.get_solver_cls(config.solver_type)(config=config)
-    s = solver_(
-        model,
-        solving_constraint=solving_constraint,
-        solving_params=constraint_params,
-        ret_solution=True)
-    v = utils.DimacsVerifier("dataset/test.dimacs")
-    self.assertTrue(v.is_correct(utils.z3_cnf_solution_str(s)))
-
-  def test_cnf2_solving(self):
-    np.random.seed(0)
-    config = configs.Config(
-        data_file="dataset/test2.dimacs",
-        data_ext="dimacs",
-        puzzle_type="cnf",
-        solver_type="z3",
-        problem_type="sat")
-    data = datasets.Dataset(config)
-    constraint_params = data.constraint_params
-    model, solving_constraint = \
-        models.construct_model(
-          config = config,
-          constraint_param = constraint_params
-        )
-
-    solver_ = solver.get_solver_cls(config.solver_type)(config=config)
-    s = solver_(
-        model,
-        solving_constraint=solving_constraint,
-        solving_params=constraint_params,
-        ret_solution=True)
-    v = utils.DimacsVerifier("dataset/test2.dimacs")
-    self.assertTrue(v.is_correct(utils.z3_cnf_solution_str(s)))
+      solver_ = solver.get_solver_cls(config.solver_type)(config=config)
+      s = solver_(
+          model,
+          solving_constraint=solving_constraint,
+          solving_params=constraint_params,
+          ret_solution=True)
+      v = utils.DimacsVerifier(test_file)
+      self.assertTrue(v.is_correct(utils.z3_cnf_solution_str(s)))

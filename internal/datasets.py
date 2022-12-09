@@ -11,7 +11,7 @@ def load_cnf_from_dimacs(dimacs_file: str = None) -> dict:
       dimacs_file (str): path to the DIMACS file
      Returns:
       Dictionary that contains following entries:
-       clauses (np.ndarray): array of parsed clauses of each literal, free varaibles are denoted as 0 if can't be ignored,
+       clauses (np.ndarray): array of parsed clauses of each literal.
          for example line in DIMACS as "-x1, x3" would be parsed as "-1, 0, 3" in stored array, where x2 would be treated as
          free variable and hence been parsed as 0.
        num_clauses (int): number of clauses in DIMACS file.
@@ -110,14 +110,10 @@ def load_cnf_from_dimacs(dimacs_file: str = None) -> dict:
           f"the declared number of clause_list {num_clauses} does not match the actual number of clause_list {len(clause_list)}"
       )
 
-  clauses_np = np.zeros(
-      [len(clause_list),
-       len(max(clause_list, key=lambda x: len(x)))],
-      dtype=np.int32)
-
+  clauses_np = np.zeros([len(clause_list), num_vars], dtype=np.int32)
   for i, j in enumerate(clause_list):
-    clauses_np[i][0:len(j)] = j
-
+    idx = [abs(ele) - 1 for ele in j if ele != 0]
+    clauses_np[i][idx] = j
   return {
       "clauses": clauses_np,
       "num_clauses": int(num_clauses),

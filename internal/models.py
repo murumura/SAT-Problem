@@ -217,7 +217,7 @@ class Model(object):
     self.config = config
     self.vars = None
 
-  def init(self, constraint_param) -> dict:
+  def init(self, constraint_param: dict) -> dict:
     """Generate constrint passed to corresponding solver."""
     constraint_key = self.config.solver_type + "_" + self.config.problem_type + "_" + self.config.puzzle_type
     constraint_fn = get_constrain_fn(constraint_key)

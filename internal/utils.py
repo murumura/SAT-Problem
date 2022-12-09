@@ -23,21 +23,21 @@ class DimacsVerifier():
   def is_correct(self, guess):
     """Verifies a SAT solution against this object's
         DIMACS file.
-            Args:
-                guess (str): Assignment to be verified.
-                             Must be string of 1s and 0s.
-            Returns:
-                bool: True if `guess` satisfies the
-                           problem. False otherwise.
-        """
-    # Convert characters to bools & reverse
-    guess = [bool(int(x)) for x in guess][::-1]
+        Args:
+            guess (str): Assignment to be verified.
+                          Must be string of 1s and 0s.
+        Returns:
+            bool: True if `guess` satisfies the
+                        problem. False otherwise.
+    """
+    # Convert characters to bools
+    guess = [bool(int(x)) for x in guess]
     for line in self.dimacs.split('\n'):
-      line = line.strip(' 0')
       if not line:  # ignore empty line
         continue
+      line = line.lstrip().rstrip("0").rstrip()
       clause_eval = False
-      for literal in line.split(' '):
+      for literal in re.split(r'\s+', line):
         if literal in ['p', 'c']:
           # line is not a clause
           clause_eval = True
@@ -159,6 +159,7 @@ def z3_cnf_solution_str(z3_cnf_sol: str) -> str:
       ("[A-Za-z0-9]+_[0-9]+[\s]*=[\s]*True", "1"),
       ("[A-Za-z0-9]+_[0-9]+[\s]*=[\s]*False", "0")
   ]
+  suffix_pattern = re.compile('[0-9]+')
   # yapf: enable
   finder = [(re.compile(p), s) for p, s in asgmt_patterns]
   asgmt_group = re.findall(
@@ -170,6 +171,7 @@ def z3_cnf_solution_str(z3_cnf_sol: str) -> str:
       for p, s in finder
       if re.match(p, asgmt)
   ]
-  vars = re.findall(r'[A-Za-z0-9]+_[0-9]+', z3_cnf_sol)
-  sol_str = [x for _, x in sorted(zip(vars, asgmt_vals))]
+  suffix = re.findall(r'[A-Za-z0-9]+_[0-9]+', z3_cnf_sol)
+  suffix = [int(suffix_pattern.search(x).group(0)) for x in suffix]
+  sol_str = [x for _, x in sorted(zip(suffix, asgmt_vals))]
   return ''.join(sol_str)

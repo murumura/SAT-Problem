@@ -11,7 +11,7 @@ class DatasetsTest(absltest.TestCase):
   def test_load_from_dimacs_file(self):
     np.random.seed(0)
     dimacs_dict = datasets.load_cnf_from_dimacs("dataset/test2.dimacs")
-    clauses_gt = np.array([[1, 2, -3], [-2, 3, 0]], dtype=np.int32)
+    clauses_gt = np.array([[1, 2, -3], [0, -2, 3]], dtype=np.int32)
     np.testing.assert_allclose(
         dimacs_dict['clauses'], clauses_gt, atol=1e-4, rtol=1e-4)
     self.assertEqual(2, dimacs_dict['num_clauses'])
