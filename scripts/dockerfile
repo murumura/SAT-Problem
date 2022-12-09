@@ -23,7 +23,8 @@ RUN pip install --upgrade pip && pip --no-cache-dir install\
     qiskit \
     Pillow \
     mediapy \
-    absl-py
+    absl-py \
+    yapf
 
 RUN ln -s /usr/bin/python3 /usr/bin/python 
 WORKDIR /sat

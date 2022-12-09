@@ -1,8 +1,9 @@
-from typing import Any, Callable, Optional, Tuple
+from typing import Optional
 from absl import flags
 from internal import utils
 import dataclasses
 import gin
+
 
 @gin.configurable()
 @dataclasses.dataclass
@@ -11,15 +12,18 @@ class Config:
   checkpoint_dir: Optional[str] = None  # Where to log checkpoints.
   data_file: Optional[str] = None  # Input data directory.
   data_ext: Optional[str] = 'dimacs'  # Data extension
-  puzzle_type: str = 'sudoku'  # only cnf | sudoku | latin_square are supported
-  solver_type: str = 'z3'
+  puzzle_type: str = 'sudoku'  # Only cnf | sudoku | latin_square are supported
+  solver_type: str = 'z3'  # Only z3 | qiskit are supported
+  problem_type: str = 'sat'  # Only sat | smt are supported
+
 
 def define_common_flags():
-  # Define the flags used by both train.py and eval.py
+  # Define the flags used by eval.py
   flags.DEFINE_string('mode', None, 'Required by GINXM, not used.')
   flags.DEFINE_string('base_folder', None, 'Required by GINXM, not used.')
   flags.DEFINE_multi_string('gin_bindings', None, 'Gin parameter bindings.')
   flags.DEFINE_multi_string('gin_configs', None, 'Gin config files.')
+
 
 def load_config(save_config=True):
   """Load the config, and optionally checkpoint it."""

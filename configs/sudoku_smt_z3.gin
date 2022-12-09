@@ -1,0 +1,5 @@
+Config.data_file = 'dataset/sudoku.txt'
+Config.data_ext = 'txt'
+Config.puzzle_type = 'sudoku'
+Config.solver_type = 'z3'
+Config.problem_type = 'smt'
