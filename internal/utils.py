@@ -152,7 +152,7 @@ def z3_cnf_solution_str(z3_cnf_sol: str) -> str:
   """Convert a z3.Boolean CNF solution to string of 1s and 0s with numerical order of variable suffix.
   Eg:
     [x_2 = True, x_0 = True,  x_1 = False] =>  101
-    [x_2 = True, x_0 = False, x_1 = False] =>  100
+    [x_2 = True, x_0 = False, x_1 = False] =>  001
   """
   # yapf: disable
   asgmt_patterns = [
@@ -171,7 +171,9 @@ def z3_cnf_solution_str(z3_cnf_sol: str) -> str:
       for p, s in finder
       if re.match(p, asgmt)
   ]
-  suffix = re.findall(r'[A-Za-z0-9]+_[0-9]+', z3_cnf_sol)
-  suffix = [int(suffix_pattern.search(x).group(0)) for x in suffix]
+  suffix = [
+      int(suffix_pattern.search(x).group(0))
+      for x in re.findall(r'[A-Za-z0-9]+_[0-9]+', z3_cnf_sol)
+  ]
   sol_str = [x for _, x in sorted(zip(suffix, asgmt_vals))]
   return ''.join(sol_str)

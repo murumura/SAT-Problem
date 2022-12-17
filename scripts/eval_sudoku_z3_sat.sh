@@ -1,4 +1,4 @@
-PROBLEM_FILE=sudoku.txt
+PROBLEM_FILE=puzzle.txt
 EXPERIMENT=sudoku
 SOLVER=z3
 PROBLEM_TYPE=sat

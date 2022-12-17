@@ -3,6 +3,10 @@ from internal import configs
 from internal import models
 from typing import Any, Optional, Tuple
 import z3
+from qiskit.circuit.library.phase_oracle import PhaseOracle
+from qiskit.algorithms import AmplificationProblem, Grover
+from qiskit.primitives import Sampler
+from qiskit.visualization import plot_histogram
 
 solver_registry = {}
 
@@ -26,7 +30,7 @@ def get_solver_cls(name):
 
 
 class BaseSolver(metaclass=abc.ABCMeta):
-  """A based solver containing operation for SAT/SMT problem solving"""
+  """A based solver containing operation for SAT/SMT/QC problem solving"""
 
   def __init__(self, config: configs.Config):
     super().__init__()
@@ -43,6 +47,74 @@ class BaseSolver(metaclass=abc.ABCMeta):
       self, model: models.Model, solving_constraint: Optional[Tuple[Any, ...]],
       solving_params: dict):
     """Solve """
+
+
+@register_solver('qiskit')
+class QSSolver(BaseSolver):
+
+  def print_solution(self, sol, solver_model, solving_params: dict) -> str:
+    ret_sol = ""
+    print(f"Solution of {self.puzzle_type} problem:")
+    if self.puzzle_type == "cnf":
+      # bind boolean solution to orderdict
+      res_dict = solver_model.get_vars()
+      res_dict.update(
+          (f"cnf_%s" % (i + 1), " = True" if val == '1' else " = False")
+          for i, val in enumerate(sol))
+      ret_sol = "[" + ' '.join(
+          [
+              ("," if i != 0 else '') + key + res_dict.get(key, '')
+              for (i, key) in enumerate(res_dict.keys())
+          ]) + "]"
+    print(ret_sol)
+    return ret_sol
+
+  def __call__(
+      self,
+      model: models.Model,
+      solving_constraint: Optional[Tuple[Any, ...]],
+      solving_params: dict,
+      ret_solution: bool = False):
+
+    def prepare_grover(use_sampler: str, iterations=None, growth_rate=None):
+      """Prepare Grover instance"""
+      if use_sampler == "ideal":
+        sampler = Sampler()
+        grover = Grover(
+            sampler=sampler, iterations=iterations, growth_rate=growth_rate)
+      elif use_sampler == "shots":
+        sampler_with_shots = Sampler(options={"shots": 1024, "seed": 123})
+        grover = Grover(
+            sampler=sampler_with_shots,
+            iterations=iterations,
+            growth_rate=growth_rate)
+      else:
+        raise ValueError("Unsupport use_sampler type")
+      return grover
+
+    boolean_expr = solving_constraint
+    oracle = PhaseOracle(boolean_expr)
+    # The oracle can now be used to create an Grover instance:
+    problem = AmplificationProblem(
+        oracle, is_good_state=oracle.evaluate_bitstring)
+    result = None
+    grover = prepare_grover(use_sampler="shots")
+    ret_sol = None
+    if problem is not None:
+      result = grover.amplify(problem)
+      for i, dist in enumerate(result.circuit_results):
+        if ret_sol is not None:
+          break
+        keys, values = zip(*sorted(dist.items(), reverse=False))
+        for k_i, key in enumerate(keys):
+          if (oracle.evaluate_bitstring(key)):
+            ret_sol = self.print_solution(
+                sol=key, solver_model=model, solving_params=solving_params)
+            break
+    if ret_sol is None:
+      print("Failed to solve")
+    if ret_solution:
+      return ret_sol
 
 
 @register_solver('z3')
@@ -99,4 +171,6 @@ class Z3Solver(BaseSolver):
       if ret_solution:
         return s
     else:
-      print("failed to solve")
+      print("Failed to solve")
+      if ret_solution:
+        return None

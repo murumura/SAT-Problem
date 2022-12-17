@@ -20,6 +20,6 @@ clean:
 	find . -name "*.pyc" -type f -delete
 	@echo "Clean PYC folder:"
 	rm -rf ./internal/__pycache__
-	rm -rf ./__pycache__
+	rm -rf ./__pycache__ ./tests/__pycache__
 	@echo "Clean ipynb checkpoint:"
-	rm -rf .ipynb_checkpoints ./internal/.ipynb_checkpoints
+	rm -rf .ipynb_checkpoints ./internal/.ipynb_checkpoints 

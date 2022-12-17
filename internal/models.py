@@ -1,9 +1,12 @@
 """Basic CNF form, Sudoku Puzzle and Latin Square Puzzle, with helper functions for problem construction and encoding."""
 from internal import configs
 from typing import Tuple
+from collections import OrderedDict
 import itertools
 import z3
 import math
+import qiskit
+import sympy
 
 constraint_registry = {}
 
@@ -179,6 +182,43 @@ def latin_square_smt_constraint(constraint_param: dict) -> dict:
   return {"constraint": latin_square_constraint, "constraint_vars": vars}
 
 
+@register_constraint('qiskit_sat_cnf')
+def qc_cnf_constraint(constraint_param: dict) -> dict:
+  """ Create a BooleanExpression from the string in the DIMACS format."""
+  # Encode the k-sat problem in to Boolean expression form
+  clauses = constraint_param['clauses'].tolist()
+  num_vars = constraint_param['num_vars']
+  var_names = [f"cnf_%s" % (i + 1) for i in range(num_vars)]
+  sympy_clauses = []
+  for clause in clauses:
+    list = []
+    for lit in clause:
+      num = int(lit)
+      if num == 0:
+        continue
+      negative = (num < 0)
+      if negative:
+        list.append(~sympy.core.Symbol("cnf_%s" % abs(num)))
+      else:
+        list.append(sympy.core.Symbol("cnf_%s" % abs(num)))
+    if len(list) > 0:
+      sympy_clauses.append(sympy.logic.boolalg.Or(*list))
+  boolean_expr = repr(sympy.logic.boolalg.And(*sympy_clauses))
+  # construct a order dict for storing solving variable
+  c_vars = OrderedDict([(name, None) for name in var_names])
+  return {"constraint": boolean_expr, "constraint_vars": c_vars}
+
+
+@register_constraint('qiskit_sat_sudoku')
+def qc_sudoku_clauses(constraint_param: dict) -> dict:
+  pass
+
+
+@register_constraint('qiskit_sat_latin_square')
+def qc_latin_square_clauses(constraint_param: dict) -> dict:
+  pass
+
+
 @register_constraint('z3_sat_cnf')
 def cnf_z3_constraint(constraint_param: dict) -> dict:
   """Reduce CNF expression to Z3 solvable form."""
@@ -218,7 +258,7 @@ class Model(object):
     self.vars = None
 
   def init(self, constraint_param: dict) -> dict:
-    """Generate constrint passed to corresponding solver."""
+    """Generate constraint passed to corresponding solver."""
     constraint_key = self.config.solver_type + "_" + self.config.problem_type + "_" + self.config.puzzle_type
     constraint_fn = get_constrain_fn(constraint_key)
     constraint_dict = constraint_fn(constraint_param)
@@ -232,7 +272,7 @@ class Model(object):
 
 def construct_model(constraint_param: dict,
                     config: configs.Config) -> Tuple[Model, dict]:
-  """Construct a SAT/SMT based model.
+  """Construct a SAT/SMT/QC based model.
     Args:
       constraint_param: A dict consists of parameters for generating solving constraint.
     Returns:
