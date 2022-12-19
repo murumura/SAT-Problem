@@ -1,12 +1,18 @@
 """Basic CNF form, Sudoku Puzzle and Latin Square Puzzle, with helper functions for problem construction and encoding."""
 from internal import configs
+from internal import utils
 from typing import Tuple
 from collections import OrderedDict
 import itertools
 import z3
+import sympy.logic.boolalg as sympy_logic
 import math
 import qiskit
 import sympy
+# importing Qiskit
+from qiskit import IBMQ, Aer, assemble, transpile
+from qiskit import QuantumCircuit, ClassicalRegister, QuantumRegister
+from sympy.logic import simplify_logic
 
 constraint_registry = {}
 
@@ -203,7 +209,7 @@ def qc_cnf_constraint(constraint_param: dict) -> dict:
         list.append(sympy.core.Symbol("cnf_%s" % abs(num)))
     if len(list) > 0:
       sympy_clauses.append(sympy.logic.boolalg.Or(*list))
-  boolean_expr = repr(sympy.logic.boolalg.And(*sympy_clauses))
+  boolean_expr = repr(simplify_logic(sympy.logic.boolalg.And(*sympy_clauses)))
   # construct a order dict for storing solving variable
   c_vars = OrderedDict([(name, None) for name in var_names])
   return {"constraint": boolean_expr, "constraint_vars": c_vars}
@@ -216,7 +222,68 @@ def qc_sudoku_clauses(constraint_param: dict) -> dict:
 
 @register_constraint('qiskit_sat_latin_square')
 def qc_latin_square_clauses(constraint_param: dict) -> dict:
-  pass
+  rows, cols = constraint_param['num_rows'], constraint_param['num_cols']
+  grid = constraint_param['puzzle'].tolist()
+  if rows >= 4 or cols >= 4:
+    raise ValueError(f"Only supports puzzle sizes <= 4x4, got {rows}x{cols}")
+  num_vars = rows
+  sympy_clauses = []
+  sympy_vars = [
+      [
+          [sympy.core.Symbol(f'x_{r}_{c}_{v}')
+           for v in range(1, rows + 1)]
+          for c in range(cols)
+      ]
+      for r in range(rows)
+  ]
+  # consider unsolved variables
+  c0 = [
+      sympy_vars[r][c][grid[r][c] - 1]
+      for r in range(rows)
+      for c in range(cols)
+      if grid[r][c] != 0
+  ]
+  c0 = sympy_logic.to_cnf(sympy_logic.And(*c0))
+  sympy_clauses.append(c0)
+  # each entry has at least one value
+  c1 = [
+      sympy_logic.Or(*[*sympy_vars[r][c]])
+      for r in range(rows)
+      for c in range(cols)
+  ]
+  c1 = sympy_logic.to_cnf(simplify_logic(sympy_logic.And(*c1)))
+  sympy_clauses.append(c1)
+  # each entry has at most one value
+  c2 = \
+    [sympy_logic.Or(*[sympy_logic.Not(sympy_vars[r][c][v]), sympy_logic.Not(sympy_vars[r][c][v_])])
+      for r in range(rows) for c in range(cols) for v in range(num_vars) for v_ in range(v)]
+  c2 = sympy_logic.to_cnf(simplify_logic(sympy_logic.And(*c2)))
+  sympy_clauses.append(c2)
+  # each row has all numbers
+  c3 = [
+      sympy_logic.Or(*[sympy_vars[r][c][v]
+                       for c in range(cols)])
+      for v in range(num_vars)
+      for r in range(rows)
+  ]
+  c3 = sympy_logic.to_cnf(simplify_logic(sympy_logic.And(*c3)))
+  sympy_clauses.append(c3)
+  # each columns has all numbers
+  c4 = [
+      sympy_logic.Or(*[sympy_vars[r][c][v]
+                       for r in range(rows)])
+      for v in range(num_vars)
+      for c in range(cols)
+  ]
+  c4 = sympy_logic.to_cnf(simplify_logic(sympy_logic.And(*c4)))
+  sympy_clauses.append(c4)
+  sympy_expr = \
+      sympy_logic.to_cnf(
+          simplify_logic(sympy.logic.boolalg.And(*sympy_clauses)))
+  boolean_expr = repr(sympy_expr)
+  dimacs_f = utils.to_dimacs_formula(sympy_expr)
+  print(dimacs_f)
+  return {"constraint": boolean_expr, "constraint_vars": None}
 
 
 @register_constraint('z3_sat_cnf')

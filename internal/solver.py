@@ -55,7 +55,11 @@ class QSSolver(BaseSolver):
   def print_solution(self, sol, solver_model, solving_params: dict) -> str:
     ret_sol = ""
     print(f"Solution of {self.puzzle_type} problem:")
-    if self.puzzle_type == "cnf":
+    if self.puzzle_type in ("sudoku", "latin_square"):
+      n_rows = solving_params['num_rows']
+      n_cols = solving_params['num_cols']
+      print("here")
+    elif self.puzzle_type == "cnf":
       # bind boolean solution to orderdict
       res_dict = solver_model.get_vars()
       res_dict.update(
@@ -76,7 +80,8 @@ class QSSolver(BaseSolver):
       solving_params: dict,
       ret_solution: bool = False):
 
-    def prepare_grover(use_sampler: str, iterations=None, growth_rate=None):
+    def prepare_default_grover(
+        use_sampler: str, iterations=None, growth_rate=None):
       """Prepare Grover instance"""
       if use_sampler == "ideal":
         sampler = Sampler()
@@ -89,7 +94,9 @@ class QSSolver(BaseSolver):
             iterations=iterations,
             growth_rate=growth_rate)
       else:
-        raise ValueError("Unsupport use_sampler type")
+        raise ValueError(
+            f"Unsupport use_sampler type, only supoort ideal, shots, got {use_sampler}"
+        )
       return grover
 
     boolean_expr = solving_constraint
@@ -98,7 +105,7 @@ class QSSolver(BaseSolver):
     problem = AmplificationProblem(
         oracle, is_good_state=oracle.evaluate_bitstring)
     result = None
-    grover = prepare_grover(use_sampler="shots")
+    grover = prepare_default_grover(use_sampler="shots")
     ret_sol = None
     if problem is not None:
       result = grover.amplify(problem)

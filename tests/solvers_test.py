@@ -8,7 +8,7 @@ from internal import utils
 from absl.testing import absltest
 import numpy as np
 from sympy.logic.utilities.dimacs import load
-
+from sympy.logic import simplify_logic
 
 def sympy_load_file(location):
   """Loads a boolean expression from a file."""
@@ -113,7 +113,7 @@ class SolversTest(absltest.TestCase):
   def test_qc_cnf_solving(self):
     np.random.seed(0)
     for test_file in ("dataset/test.dimacs", "dataset/test2.dimacs",
-                      "dataset/test4.dimacs", "dataset/test5.dimacs"):
+                      "dataset/4sat.dimacs", "dataset/6sat.dimacs"):
       config = configs.Config(
           data_file=test_file,
           data_ext="dimacs",
@@ -151,4 +151,4 @@ class SolversTest(absltest.TestCase):
       data = datasets.Dataset(config)
       constraint_params = data.constraint_params
       boolean_expr = models.qc_cnf_constraint(constraint_params)['constraint']
-      self.assertEqual(boolean_expr, repr(sympy_load_file(test_file)))
+      self.assertEqual(boolean_expr, repr(simplify_logic(sympy_load_file(test_file))))
