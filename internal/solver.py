@@ -45,20 +45,27 @@ class BaseSolver(metaclass=abc.ABCMeta):
   @abc.abstractmethod
   def __call__(
       self, model: models.Model, solving_constraint: Optional[Tuple[Any, ...]],
-      solving_params: dict):
+      solving_params: dict, **kwargs):
     """Solve """
 
 
 @register_solver('qiskit')
 class QSSolver(BaseSolver):
 
-  def print_solution(self, sol, solver_model, solving_params: dict) -> str:
+  def print_solution(
+      self, sol, solver_model, solving_params: dict, **kwargs) -> str:
     ret_sol = ""
     print(f"Solution of {self.puzzle_type} problem:")
     if self.puzzle_type in ("sudoku", "latin_square"):
       n_rows = solving_params['num_rows']
       n_cols = solving_params['num_cols']
-      print("here")
+      mapping_dict = solver_model.auxiliary
+      grid = solver_model.get_vars()
+      for i, (r, c, v) in mapping_dict.items():
+        grid[r][c] = v if sol[i] == '1' else 0
+      for i in grid:
+        s_line = ' '.join(map(str, i))
+        ret_sol += s_line + "\n"
     elif self.puzzle_type == "cnf":
       # bind boolean solution to orderdict
       res_dict = solver_model.get_vars()
@@ -78,7 +85,8 @@ class QSSolver(BaseSolver):
       model: models.Model,
       solving_constraint: Optional[Tuple[Any, ...]],
       solving_params: dict,
-      ret_solution: bool = False):
+      ret_solution: bool = False,
+      **kwargs):
 
     def prepare_default_grover(
         use_sampler: str, iterations=None, growth_rate=None):
@@ -101,9 +109,9 @@ class QSSolver(BaseSolver):
 
     boolean_expr = solving_constraint
     oracle = PhaseOracle(boolean_expr)
+    verified_fn = model.verified_fn if model.verified_fn else oracle.evaluate_bitstring
     # The oracle can now be used to create an Grover instance:
-    problem = AmplificationProblem(
-        oracle, is_good_state=oracle.evaluate_bitstring)
+    problem = AmplificationProblem(oracle, is_good_state=verified_fn)
     result = None
     grover = prepare_default_grover(use_sampler="shots")
     ret_sol = None
@@ -114,7 +122,7 @@ class QSSolver(BaseSolver):
           break
         keys, values = zip(*sorted(dist.items(), reverse=False))
         for k_i, key in enumerate(keys):
-          if (oracle.evaluate_bitstring(key)):
+          if (verified_fn(key)):
             ret_sol = self.print_solution(
                 sol=key, solver_model=model, solving_params=solving_params)
             break
@@ -167,7 +175,8 @@ class Z3Solver(BaseSolver):
       model: models.Model,
       solving_constraint: Optional[Tuple[Any, ...]],
       solving_params: dict,
-      ret_solution: bool = False):
+      ret_solution: bool = False,
+      **kwargs):
     z3_solver = z3.Solver()
     z3_solver.add(solving_constraint)
     if z3_solver.check() == z3.sat:

@@ -217,73 +217,110 @@ def qc_cnf_constraint(constraint_param: dict) -> dict:
 
 @register_constraint('qiskit_sat_sudoku')
 def qc_sudoku_clauses(constraint_param: dict) -> dict:
-  pass
+  rows, cols = constraint_param['num_rows'], constraint_param['num_cols']
+  grid = constraint_param['puzzle'].tolist()
+  if rows > 4 or cols > 4:
+    raise ValueError(f"Only supports puzzle sizes <= 4x4, got {rows}x{cols}")
+  sympy_clauses = []
+
+  def duplicate_check(v, r, c, grid, nr, nc):
+    if grid[r].count(v) == 1:
+      return False
+    for i in range(nr):
+      if v == grid[i][c]:
+        return False
+    sqrt_rows, sqrt_cols = int(math.sqrt(nr)), int(math.sqrt(nc))
+    start_row = r - r % sqrt_rows
+    start_col = c - c % sqrt_cols
+    for i in range(sqrt_rows):
+      for j in range(sqrt_cols):
+        if v == grid[start_row + i][start_col + j]:
+          return False
+    return True
+
+  c_vars = OrderedDict()
+  sympy_vars = []
+  n_vars = 0
+  for r in range(rows):
+    for c in range(cols):
+      for v in range(1, rows + 1):
+        if grid[r][c] == 0 and duplicate_check(v, r, c, grid, rows, cols):
+          sympy_vars.append(sympy.core.Symbol(f'x_{r}_{c}_{v}'))
+          c_vars[n_vars] = (r, c, v)
+          n_vars += 1
+  c0 = sympy_logic.to_cnf(sympy_logic.Or(*sympy_vars))
+  sympy_clauses.append(c0)
+  sympy_expr = \
+      sympy_logic.to_cnf(
+          simplify_logic(sympy.logic.boolalg.And(*sympy_clauses)))
+  boolean_expr = repr(sympy_expr)
+
+  def qc_sudoku_verify(keys):
+    """Constructs a verified function for latin square"""
+    if all(k == '0' for k in keys):
+      return False
+    grid_filled = grid.copy()
+    for i, (r, c, v) in c_vars.items():
+      grid_filled[r][c] = v if keys[i] == '1' else 0
+    return utils.sudoku_verify(grid_filled, len(grid), len(grid))
+
+  return {
+      "constraint": boolean_expr,
+      "constraint_vars": grid,
+      "verified_fn": qc_sudoku_verify,
+      "auxiliary": c_vars
+  }
 
 
 @register_constraint('qiskit_sat_latin_square')
 def qc_latin_square_clauses(constraint_param: dict) -> dict:
   rows, cols = constraint_param['num_rows'], constraint_param['num_cols']
   grid = constraint_param['puzzle'].tolist()
-  if rows >= 4 or cols >= 4:
+  if rows > 4 or cols > 4:
     raise ValueError(f"Only supports puzzle sizes <= 4x4, got {rows}x{cols}")
-  num_vars = rows
   sympy_clauses = []
-  sympy_vars = [
-      [
-          [sympy.core.Symbol(f'x_{r}_{c}_{v}')
-           for v in range(1, rows + 1)]
-          for c in range(cols)
-      ]
-      for r in range(rows)
-  ]
-  # consider unsolved variables
-  c0 = [
-      sympy_vars[r][c][grid[r][c] - 1]
-      for r in range(rows)
-      for c in range(cols)
-      if grid[r][c] != 0
-  ]
-  c0 = sympy_logic.to_cnf(sympy_logic.And(*c0))
+
+  def duplicate_check(v, r, c, grid, nr):
+    if grid[r].count(v) == 1:
+      return False
+    for i in range(nr):
+      if v == grid[i][c]:
+        return False
+    return True
+
+  c_vars = OrderedDict()
+  sympy_vars = []
+  n_vars = 0
+  for r in range(rows):
+    for c in range(cols):
+      for v in range(1, rows + 1):
+        if grid[r][c] == 0 and duplicate_check(v, r, c, grid, rows):
+          sympy_vars.append(sympy.core.Symbol(f'x_{r}_{c}_{v}'))
+          c_vars[n_vars] = (r, c, v)
+          n_vars += 1
+
+  c0 = sympy_logic.to_cnf(sympy_logic.Or(*sympy_vars))
   sympy_clauses.append(c0)
-  # each entry has at least one value
-  c1 = [
-      sympy_logic.Or(*[*sympy_vars[r][c]])
-      for r in range(rows)
-      for c in range(cols)
-  ]
-  c1 = sympy_logic.to_cnf(simplify_logic(sympy_logic.And(*c1)))
-  sympy_clauses.append(c1)
-  # each entry has at most one value
-  c2 = \
-    [sympy_logic.Or(*[sympy_logic.Not(sympy_vars[r][c][v]), sympy_logic.Not(sympy_vars[r][c][v_])])
-      for r in range(rows) for c in range(cols) for v in range(num_vars) for v_ in range(v)]
-  c2 = sympy_logic.to_cnf(simplify_logic(sympy_logic.And(*c2)))
-  sympy_clauses.append(c2)
-  # each row has all numbers
-  c3 = [
-      sympy_logic.Or(*[sympy_vars[r][c][v]
-                       for c in range(cols)])
-      for v in range(num_vars)
-      for r in range(rows)
-  ]
-  c3 = sympy_logic.to_cnf(simplify_logic(sympy_logic.And(*c3)))
-  sympy_clauses.append(c3)
-  # each columns has all numbers
-  c4 = [
-      sympy_logic.Or(*[sympy_vars[r][c][v]
-                       for r in range(rows)])
-      for v in range(num_vars)
-      for c in range(cols)
-  ]
-  c4 = sympy_logic.to_cnf(simplify_logic(sympy_logic.And(*c4)))
-  sympy_clauses.append(c4)
   sympy_expr = \
       sympy_logic.to_cnf(
           simplify_logic(sympy.logic.boolalg.And(*sympy_clauses)))
   boolean_expr = repr(sympy_expr)
-  dimacs_f = utils.to_dimacs_formula(sympy_expr)
-  print(dimacs_f)
-  return {"constraint": boolean_expr, "constraint_vars": None}
+
+  def qc_ls_verify(keys):
+    """Constructs a verified function for latin square"""
+    if all(k == '0' for k in keys):
+      return False
+    grid_filled = grid.copy()
+    for i, (r, c, v) in c_vars.items():
+      grid_filled[r][c] = v if keys[i] == '1' else 0
+    return utils.latin_square_verify(grid_filled, len(grid))
+
+  return {
+      "constraint": boolean_expr,
+      "constraint_vars": grid,
+      "verified_fn": qc_ls_verify,
+      "auxiliary": c_vars
+  }
 
 
 @register_constraint('z3_sat_cnf')
@@ -330,6 +367,8 @@ class Model(object):
     constraint_fn = get_constrain_fn(constraint_key)
     constraint_dict = constraint_fn(constraint_param)
     self.vars = constraint_dict['constraint_vars']
+    self.verified_fn = constraint_dict.get("verified_fn", None)
+    self.auxiliary = constraint_dict.get("auxiliary", None)
     return constraint_dict['constraint']
 
   def get_vars(self):
