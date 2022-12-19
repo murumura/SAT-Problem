@@ -2,7 +2,7 @@ PROBLEM_FILE=puzzle.txt
 EXPERIMENT=sudoku
 SOLVER=z3
 PROBLEM_TYPE=sat
-DATA_DIR=./dataset
+DATA_DIR=./datasets
 CHECKPOINT_DIR=${PWD}/checkpoint/"$EXPERIMENT"/"$PROBLEM_TYPE"/"$SOLVER"
 
 python -m eval \

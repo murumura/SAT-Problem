@@ -1,0 +1,5 @@
+Config.data_file = 'datasets/test.dimacs'
+Config.data_ext = 'dimacs'
+Config.puzzle_type = 'cnf'
+Config.solver_type = 'qiskit'
+Config.problem_type = 'sat'

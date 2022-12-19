@@ -1,0 +1,5 @@
+Config.data_file = 'datasets/Latin_Square_Problem_EASY.txt'
+Config.data_ext = 'txt'
+Config.puzzle_type = 'sudoku'
+Config.solver_type = 'qiskit'
+Config.problem_type = 'sat'

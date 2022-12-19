@@ -22,8 +22,8 @@ class SolversTest(absltest.TestCase):
 
   def test_sudoku_solving(self):
     np.random.seed(0)
-    for test_file in ("dataset/puzzle2.txt", "dataset/puzzle.txt",
-                      "dataset/puzzle3.txt"):
+    for test_file in ("datasets/puzzle2.txt", "datasets/puzzle.txt",
+                      "datasets/puzzle3.txt"):
       for prob_type in ("sat", "smt"):
         config = configs.Config(
             data_file=test_file,
@@ -54,10 +54,10 @@ class SolversTest(absltest.TestCase):
 
   def test_latin_square_solving(self):
     np.random.seed(0)
-    for test_file in ("dataset/Latin_Square_Problem_EASY.txt",
-                      "dataset/Latin_Square_Problem_MEDIUM.txt",
-                      "dataset/Latin_Square_Problem_HARD.txt",
-                      "dataset/puzzle.txt"):
+    for test_file in ("datasets/Latin_Square_Problem_EASY.txt",
+                      "datasets/Latin_Square_Problem_MEDIUM.txt",
+                      "datasets/Latin_Square_Problem_HARD.txt",
+                      "datasets/puzzle.txt"):
       for prob_type in ("sat", "smt"):
         config = configs.Config(
             data_file=test_file,
@@ -85,9 +85,9 @@ class SolversTest(absltest.TestCase):
 
   def test_cnf_solving(self):
     np.random.seed(0)
-    for test_file in ("dataset/test.dimacs", "dataset/test2.dimacs",
-                      "dataset/test3.dimacs", "dataset/test4.dimacs",
-                      "dataset/test5.dimacs"):
+    for test_file in ("datasets/test.dimacs", "datasets/test2.dimacs",
+                      "datasets/test3.dimacs", "datasets/test4.dimacs",
+                      "datasets/test5.dimacs"):
       config = configs.Config(
           data_file=test_file,
           data_ext="dimacs",
@@ -113,8 +113,8 @@ class SolversTest(absltest.TestCase):
 
   def test_qc_cnf_solving(self):
     np.random.seed(0)
-    for test_file in ("dataset/test.dimacs", "dataset/test2.dimacs",
-                      "dataset/4sat.dimacs", "dataset/6sat.dimacs"):
+    for test_file in ("datasets/test.dimacs", "datasets/test2.dimacs",
+                      "datasets/4sat.dimacs", "datasets/6sat.dimacs"):
       config = configs.Config(
           data_file=test_file,
           data_ext="dimacs",
@@ -140,9 +140,9 @@ class SolversTest(absltest.TestCase):
 
   def test_cnf_boolean_expr(self):
     np.random.seed(0)
-    for test_file in ("dataset/test.dimacs", "dataset/test2.dimacs",
-                      "dataset/test3.dimacs", "dataset/test4.dimacs",
-                      "dataset/test5.dimacs"):
+    for test_file in ("datasets/test.dimacs", "datasets/test2.dimacs",
+                      "datasets/test3.dimacs", "datasets/test4.dimacs",
+                      "datasets/test5.dimacs"):
       config = configs.Config(
           data_file=test_file,
           data_ext="dimacs",
@@ -157,9 +157,9 @@ class SolversTest(absltest.TestCase):
 
   def test_latin_square_solving(self):
     np.random.seed(0)
-    for test_file in ("dataset/Latin_Square_Problem_EASY.txt",
-                      "dataset/Latin_Square_Problem_MEDIUM.txt",
-                      "dataset/Latin_Square_Problem_HARD.txt"):
+    for test_file in ("datasets/Latin_Square_Problem_EASY.txt",
+                      "datasets/Latin_Square_Problem_MEDIUM.txt",
+                      "datasets/Latin_Square_Problem_HARD.txt"):
       config = configs.Config(
           data_file=test_file,
           data_ext="txt",

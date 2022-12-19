@@ -1,5 +1,5 @@
 Config.data_file = 'datasets/puzzle.txt'
 Config.data_ext = 'txt'
-Config.puzzle_type = 'sudoku'
+Config.puzzle_type = 'latin_square'
 Config.solver_type = 'z3'
-Config.problem_type = 'sat'
+Config.problem_type = 'smt'
