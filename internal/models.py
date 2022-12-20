@@ -7,11 +7,7 @@ import itertools
 import z3
 import sympy.logic.boolalg as sympy_logic
 import math
-import qiskit
 import sympy
-# importing Qiskit
-from qiskit import IBMQ, Aer, assemble, transpile
-from qiskit import QuantumCircuit, ClassicalRegister, QuantumRegister
 from sympy.logic import simplify_logic
 
 constraint_registry = {}
@@ -210,6 +206,7 @@ def qc_cnf_constraint(constraint_param: dict) -> dict:
     if len(list) > 0:
       sympy_clauses.append(sympy.logic.boolalg.Or(*list))
   boolean_expr = repr(simplify_logic(sympy.logic.boolalg.And(*sympy_clauses)))
+  print(boolean_expr)
   # construct a order dict for storing solving variable
   c_vars = OrderedDict([(name, None) for name in var_names])
   return {"constraint": boolean_expr, "constraint_vars": c_vars}
@@ -256,7 +253,7 @@ def qc_sudoku_clauses(constraint_param: dict) -> dict:
   boolean_expr = repr(sympy_expr)
 
   def qc_sudoku_verify(keys):
-    """Constructs a verified function for latin square"""
+    """Constructs a verified function for sudoku placement"""
     if all(k == '0' for k in keys):
       return False
     grid_filled = grid.copy()
@@ -307,7 +304,7 @@ def qc_latin_square_clauses(constraint_param: dict) -> dict:
   boolean_expr = repr(sympy_expr)
 
   def qc_ls_verify(keys):
-    """Constructs a verified function for latin square"""
+    """Constructs a verified function for latin square placement"""
     if all(k == '0' for k in keys):
       return False
     grid_filled = grid.copy()

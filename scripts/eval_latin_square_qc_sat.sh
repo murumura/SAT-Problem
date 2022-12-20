@@ -1,4 +1,4 @@
-PROBLEM_FILE=Latin_Square_Problem_EASY.txt
+PROBLEM_FILE=Latin_Square_Problem_MEDIUM.txt
 EXPERIMENT=latin_square
 SOLVER=qiskit
 PROBLEM_TYPE=sat

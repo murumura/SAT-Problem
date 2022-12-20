@@ -57,8 +57,6 @@ class QSSolver(BaseSolver):
     ret_sol = ""
     print(f"Solution of {self.puzzle_type} problem:")
     if self.puzzle_type in ("sudoku", "latin_square"):
-      n_rows = solving_params['num_rows']
-      n_cols = solving_params['num_cols']
       mapping_dict = solver_model.auxiliary
       grid = solver_model.get_vars()
       for i, (r, c, v) in mapping_dict.items():
@@ -109,11 +107,13 @@ class QSSolver(BaseSolver):
 
     boolean_expr = solving_constraint
     oracle = PhaseOracle(boolean_expr)
+
     verified_fn = model.verified_fn if model.verified_fn else oracle.evaluate_bitstring
     # The oracle can now be used to create an Grover instance:
     problem = AmplificationProblem(oracle, is_good_state=verified_fn)
     result = None
-    grover = prepare_default_grover(use_sampler="shots")
+    grover = prepare_default_grover(use_sampler="shots", iterations=None)
+
     ret_sol = None
     if problem is not None:
       result = grover.amplify(problem)

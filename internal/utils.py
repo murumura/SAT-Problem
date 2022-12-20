@@ -7,8 +7,6 @@ import itertools
 import numpy as np
 from PIL import Image
 from typing import List
-from sympy.core.symbol import Symbol
-from sympy.logic.boolalg import to_cnf, And, Or, Not
 
 
 class DimacsVerifier():
