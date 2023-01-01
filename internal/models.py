@@ -204,9 +204,8 @@ def qc_cnf_constraint(constraint_param: dict) -> dict:
       else:
         list.append(sympy.core.Symbol("cnf_%s" % abs(num)))
     if len(list) > 0:
-      sympy_clauses.append(sympy.logic.boolalg.Or(*list))
-  boolean_expr = repr(simplify_logic(sympy.logic.boolalg.And(*sympy_clauses)))
-  print(boolean_expr)
+      sympy_clauses.append(sympy_logic.Or(*list))
+  boolean_expr = repr(simplify_logic(sympy_logic.And(*sympy_clauses)))
   # construct a order dict for storing solving variable
   c_vars = OrderedDict([(name, None) for name in var_names])
   return {"constraint": boolean_expr, "constraint_vars": c_vars}
@@ -249,7 +248,7 @@ def qc_sudoku_clauses(constraint_param: dict) -> dict:
   sympy_clauses.append(c0)
   sympy_expr = \
       sympy_logic.to_cnf(
-          simplify_logic(sympy.logic.boolalg.And(*sympy_clauses)))
+          simplify_logic(sympy_logic.And(*sympy_clauses)))
   boolean_expr = repr(sympy_expr)
 
   def qc_sudoku_verify(keys):
@@ -300,7 +299,7 @@ def qc_latin_square_clauses(constraint_param: dict) -> dict:
   sympy_clauses.append(c0)
   sympy_expr = \
       sympy_logic.to_cnf(
-          simplify_logic(sympy.logic.boolalg.And(*sympy_clauses)))
+          simplify_logic(sympy_logic.And(*sympy_clauses)))
   boolean_expr = repr(sympy_expr)
 
   def qc_ls_verify(keys):
