@@ -19,7 +19,7 @@ def sympy_load_file(location):
 
 
 class SolversTest(absltest.TestCase):
-
+  
   def test_sudoku_solving(self):
     np.random.seed(0)
     for test_file in ("datasets/puzzle2.txt", "datasets/puzzle.txt",

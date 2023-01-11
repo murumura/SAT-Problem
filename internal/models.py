@@ -220,6 +220,7 @@ def qc_sudoku_clauses(constraint_param: dict) -> dict:
   sympy_clauses = []
 
   def duplicate_check(v, r, c, grid, nr, nc):
+    """Checkout whether placement (r, c) = v is llegal in sudoku grid"""
     if grid[r].count(v) == 1:
       return False
     for i in range(nr):
@@ -228,11 +229,13 @@ def qc_sudoku_clauses(constraint_param: dict) -> dict:
     sqrt_rows, sqrt_cols = int(math.sqrt(nr)), int(math.sqrt(nc))
     start_row = r - r % sqrt_rows
     start_col = c - c % sqrt_cols
-    for i in range(sqrt_rows):
-      for j in range(sqrt_cols):
-        if v == grid[start_row + i][start_col + j]:
-          return False
-    return True
+    blk_check = [
+        grid[start_row + i][start_col + j]
+        for j in range(sqrt_cols)
+        for i in range(sqrt_rows)
+        if v == grid[start_row + i][start_col + j]
+    ]
+    return False if len(blk_check) > 0 else True
 
   c_vars = OrderedDict()
   sympy_vars = []
@@ -277,6 +280,7 @@ def qc_latin_square_clauses(constraint_param: dict) -> dict:
   sympy_clauses = []
 
   def duplicate_check(v, r, c, grid, nr):
+    """Checkout whether placement (r, c) = v is llegal in latin square grid"""
     if grid[r].count(v) == 1:
       return False
     for i in range(nr):
@@ -294,7 +298,7 @@ def qc_latin_square_clauses(constraint_param: dict) -> dict:
           sympy_vars.append(sympy.core.Symbol(f'x_{r}_{c}_{v}'))
           c_vars[n_vars] = (r, c, v)
           n_vars += 1
-
+  
   c0 = sympy_logic.to_cnf(sympy_logic.Or(*sympy_vars))
   sympy_clauses.append(c0)
   sympy_expr = \
@@ -309,6 +313,7 @@ def qc_latin_square_clauses(constraint_param: dict) -> dict:
     grid_filled = grid.copy()
     for i, (r, c, v) in c_vars.items():
       grid_filled[r][c] = v if keys[i] == '1' else 0
+    print(grid_filled)
     return utils.latin_square_verify(grid_filled, len(grid))
 
   return {

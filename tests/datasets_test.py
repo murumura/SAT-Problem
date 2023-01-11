@@ -30,7 +30,7 @@ class DatasetsTest(absltest.TestCase):
     puzzle_dict = datasets.load_cnf_from_puzzle(
         "datasets/Latin_Square_Problem_HARD.txt")
     puzzle_gt = np.array(
-        [[0, 1, 2, 0], [2, 0, 0, 1], [1, 0, 0, 2], [0, 0, 1, 0]],
+        [[0, 1, 2, 3], [2, 0, 4, 1], [1, 4, 0, 2], [3, 0, 1, 0]],
         dtype=np.int32)
     np.testing.assert_allclose(
         puzzle_dict['puzzle'], puzzle_gt, atol=1e-4, rtol=1e-4)
@@ -58,7 +58,7 @@ class DatasetsTest(absltest.TestCase):
     data = datasets.Dataset(config)
     constraint_params = data.constraint_params
     puzzle_gt = np.array(
-        [[0, 1, 2, 0], [2, 0, 0, 1], [1, 0, 0, 2], [0, 0, 1, 0]],
+        [[0, 1, 2, 3], [2, 0, 4, 1], [1, 4, 0, 2], [3, 0, 1, 0]],
         dtype=np.int32)
     np.testing.assert_allclose(
         constraint_params['puzzle'], puzzle_gt, atol=1e-4, rtol=1e-4)

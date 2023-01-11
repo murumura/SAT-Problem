@@ -6,7 +6,6 @@ import z3
 from qiskit.circuit.library.phase_oracle import PhaseOracle
 from qiskit.algorithms import AmplificationProblem, Grover
 from qiskit.primitives import Sampler
-from qiskit.visualization import plot_histogram
 
 solver_registry = {}
 
