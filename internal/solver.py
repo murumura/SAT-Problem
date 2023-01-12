@@ -59,7 +59,7 @@ class QSSolver(BaseSolver):
       mapping_dict = solver_model.auxiliary
       grid = solver_model.get_vars()
       for i, (r, c, v) in mapping_dict.items():
-        grid[r][c] = v if sol[i] == '1' else 0
+        grid[r][c] = v if sol[i] == '1' else grid[r][c]
       for i in grid:
         s_line = ' '.join(map(str, i))
         ret_sol += s_line + "\n"
@@ -119,7 +119,7 @@ class QSSolver(BaseSolver):
       for i, dist in enumerate(result.circuit_results):
         if ret_sol is not None:
           break
-        keys, values = zip(*sorted(dist.items(), reverse=False))
+        keys, values = zip(*sorted(dist.items(), reverse=True))
         for k_i, key in enumerate(keys):
           if (verified_fn(key)):
             ret_sol = self.print_solution(

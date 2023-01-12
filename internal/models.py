@@ -260,7 +260,7 @@ def qc_sudoku_clauses(constraint_param: dict) -> dict:
       return False
     grid_filled = grid.copy()
     for i, (r, c, v) in c_vars.items():
-      grid_filled[r][c] = v if keys[i] == '1' else 0
+      grid_filled[r][c] = v if keys[i] == '1' else grid_filled[r][c]
     return utils.sudoku_verify(grid_filled, len(grid), len(grid))
 
   return {
@@ -298,7 +298,7 @@ def qc_latin_square_clauses(constraint_param: dict) -> dict:
           sympy_vars.append(sympy.core.Symbol(f'x_{r}_{c}_{v}'))
           c_vars[n_vars] = (r, c, v)
           n_vars += 1
-  
+
   c0 = sympy_logic.to_cnf(sympy_logic.Or(*sympy_vars))
   sympy_clauses.append(c0)
   sympy_expr = \
@@ -312,8 +312,7 @@ def qc_latin_square_clauses(constraint_param: dict) -> dict:
       return False
     grid_filled = grid.copy()
     for i, (r, c, v) in c_vars.items():
-      grid_filled[r][c] = v if keys[i] == '1' else 0
-    print(grid_filled)
+      grid_filled[r][c] = v if keys[i] == '1' else grid_filled[r][c]
     return utils.latin_square_verify(grid_filled, len(grid))
 
   return {

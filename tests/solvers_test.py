@@ -19,7 +19,7 @@ def sympy_load_file(location):
 
 
 class SolversTest(absltest.TestCase):
-  
+
   def test_sudoku_solving(self):
     np.random.seed(0)
     for test_file in ("datasets/puzzle2.txt", "datasets/puzzle.txt",
@@ -155,7 +155,7 @@ class SolversTest(absltest.TestCase):
       self.assertEqual(
           boolean_expr, repr(simplify_logic(sympy_load_file(test_file))))
 
-  def test_latin_square_solving(self):
+  def test_qc_latin_square_solving(self):
     np.random.seed(0)
     for test_file in ("datasets/Latin_Square_Problem_EASY.txt",
                       "datasets/Latin_Square_Problem_MEDIUM.txt",
@@ -182,3 +182,31 @@ class SolversTest(absltest.TestCase):
           ret_solution=True)
       ls_sol = utils.puzzle_sol_str_to_list(s, n_rows=rows, n_cols=cols)
       self.assertTrue(utils.latin_square_verify(ls_sol, n_rows=rows))
+
+  def test_qc_sudoku_solving(self):
+    np.random.seed(0)
+    for test_file in ("datasets/Latin_Square_Problem_EASY.txt",
+                      "datasets/Latin_Square_Problem_MEDIUM.txt",
+                      "datasets/Latin_Square_Problem_HARD.txt"):
+      config = configs.Config(
+          data_file=test_file,
+          data_ext="txt",
+          puzzle_type="sudoku",
+          solver_type="qiskit",
+          problem_type="sat")
+      data = datasets.Dataset(config)
+      constraint_params = data.constraint_params
+      model, solving_constraint = \
+          models.construct_model(
+              config = config,
+              constraint_param = constraint_params
+          )
+      rows, cols = constraint_params['num_rows'], constraint_params['num_cols']
+      cfg_solver = solver.get_solver_cls(config.solver_type)(config=config)
+      s = cfg_solver(
+          model,
+          solving_constraint=solving_constraint,
+          solving_params=constraint_params,
+          ret_solution=True)
+      ls_sol = utils.puzzle_sol_str_to_list(s, n_rows=rows, n_cols=cols)
+      self.assertTrue(utils.sudoku_verify(ls_sol, n_rows=rows, n_cols=cols))
